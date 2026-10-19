@@ -2,7 +2,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { app } = require('electron')
 
-const DEFAULT_PARAMETER = 'pupilDialation'
+const DEFAULT_PARAMETER = ''
 
 function settingsFile () {
   return path.join(app.getPath('userData'), 'settings.json')
