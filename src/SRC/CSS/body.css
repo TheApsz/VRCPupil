@@ -1,0 +1,21 @@
+body {
+    display: flex;
+    height: 100svh;
+    width: 100svw;
+    flex-direction: column;
+}
+img {
+    filter: none;
+    image-rendering: pixelated;
+    border-radius: 0 !important;
+}
+* {
+    border-radius: 0 !important;
+}
+svg {
+    display: none;
+}
+
+.content {
+    width: 50svw;
+}

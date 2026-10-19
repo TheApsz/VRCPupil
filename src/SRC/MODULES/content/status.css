@@ -1,0 +1,23 @@
+#status {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+
+    .card {
+        background: var(--bg2);
+        flex: 1;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+
+        h1 {
+            color: var(--pri);
+            font-size: 30px;
+        }
+        h2 {
+            font-size: 16px;
+            color: var(--txt);
+            margin-top: 4px;
+        }
+    }
+}

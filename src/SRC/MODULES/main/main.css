@@ -1,0 +1,19 @@
+#main {
+    position: relative;
+    background: transparent;
+    width: 100%;
+    flex: 1;
+    top: 50px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+.content {
+    .title {
+        h1 {
+            color: var(--pri);
+        }
+    }
+}

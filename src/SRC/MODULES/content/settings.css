@@ -1,0 +1,51 @@
+#settings {
+    background: var(--bg2);
+    padding: 12px;
+
+    .title {
+        margin-bottom: 12px;
+    }
+
+    .card {
+
+        &.settingsPar {
+            margin-top: 16px;
+        }
+
+        h3 {
+            color: var(--txt);
+            font-size: 20px;
+        }
+        .description {
+            color: var(--txt2);
+            font-size: 12px;
+        }
+        .avatarTextInput {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: left;
+            background: var(--bgtrans);
+            padding: 4px 8px;
+
+            h2 {
+                color: var(--txt2);
+                font-size: 12px;
+            }
+            input {
+                border: 0;
+                outline: none;
+                background: transparent;
+                color: var(--pri);
+                flex: 1;
+
+                &:focus,
+                &:focus-visible {
+                    background: var(--bgtrans2);
+                    border: 0;
+                    outline: none;
+                }
+            }
+        }
+    }
+}

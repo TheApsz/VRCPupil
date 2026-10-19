@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self' https://apsz.dev; style-src 'self' https://apsz.dev https://fonts.googleapis.com; img-src 'self' data: https://apsz.dev; font-src 'self' https://apsz.dev https://fonts.gstatic.com" />
+  <title>VRCPupil</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="https://apsz.dev/API/import.css" />
+  <link rel="stylesheet" href="SRC/inject.css" />
+  <script src="lib/cash.min.js"></script>
+  <script type="module" src="SRC/inject.js" defer></script>
+  <script type="module" src="https://apsz.dev/API/import.js" defer></script>
+</head>
+<body>
+  <div id="frame" class="trans-low">
+    <h1>VRCpupil <span id="appVersion"></span></h1>
+    <div class="frameControls">
+      <div id="frameMin" class="button">
+        <img src="SRC/IMG/min.png">
+      </div>
+      <div id="frameX" class="button">
+        <img src="SRC/IMG/close.png">
+      </div>
+    </div>
+  </div>
+  
+  <div id="main">
+    <div id="preview" class="content">
+      <div class="title">
+        <h1>Preview</h1>
+      </div>
+      <div id="previewMatrix"></div>
+    </div>
+    <div id="status" class="content">
+      <div class="card">
+        <h1 data-avrValue="0"></h1>
+        <h2>Output value</h2>
+      </div>
+      <div class="card">
+        <h1 data-updRate="10"></h1>
+        <h2>Update rate</h2>
+      </div>
+      <div class="card">
+        <h1 data-osc="Offline"></h1>
+        <h2>OSC Stream</h2>
+      </div>
+    </div>
+
+    <div id="settings" class="content">
+      <div class="title">
+        <h1>Settings</h1>
+      </div>
+      <div class="card settingsPar">
+        <h3>Avatar parameter</h3>
+        <h2 class="description">Which value to drive</h2>
+        <div class="avatarTextInput">
+          <h2>/avatar/parameters/</h2>
+          <input id="avatarParameterText" type="text" spellcheck="false">
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

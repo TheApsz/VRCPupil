@@ -1,0 +1,26 @@
+#preview {
+    background: var(--bg2);
+    padding: 12px;
+}
+
+#previewMatrix {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 0px;
+    aspect-ratio: 16 / 9;
+    background: black;
+    margin-top: 12px;
+
+    .cell {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: black;
+
+        h2 {
+            margin: 0;
+            font-size: 12px;
+        }
+    }
+}

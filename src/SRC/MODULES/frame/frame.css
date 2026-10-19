@@ -1,0 +1,57 @@
+#frame {
+    position: fixed;
+    background: var(--bgtrans);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    top: 0px;
+    padding: 8px;
+    z-index: 9999;
+    -webkit-app-region: drag;
+    app-region: drag;
+
+    h1 {
+        color: var(--pri);
+        font-size: 22px;
+        margin-left: 5px;
+
+        span {
+            color: var(--txt2);
+            font-size: 16px;
+        }
+    }
+    .frameControls {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        .button {
+            position: relative;
+            width: 50px;
+            padding: 10px;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            img {
+                height: 12px;
+                aspect-ratio: 1;
+                background: transparent;
+            }
+
+            &:hover {
+                background: var(--bg2);
+            }
+        }
+
+    }
+}
+
+#frame .frameControls,
+#frame .button {
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+}
