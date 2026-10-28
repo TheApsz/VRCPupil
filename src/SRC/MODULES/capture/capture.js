@@ -1,3 +1,5 @@
+import { updateDebug } from '../content/debug.js'
+
 $(function () {
   const pupil = window.vrcpupil
 
@@ -10,8 +12,6 @@ $(function () {
   const ROWS = 5
   const CELL_PX = 16
   const RETRY_MS = 2000
-  const DEADZONE = 0.1
-  // Windows title bar height at 100% scale, cut off the top of every capture.
   const TITLE_BAR_DIP = 31
 
   const matrix = $('#previewMatrix')
@@ -36,9 +36,7 @@ $(function () {
   video.playsInline = true
 
   let timer = null
-  let lastSent = null
 
-  // Average grayscale (0..1) of each cell's area, row by row.
   function sampleCells () {
     const cropTop = Math.round(TITLE_BAR_DIP * window.devicePixelRatio)
     ctx.drawImage(video, 0, cropTop, video.videoWidth, video.videoHeight - cropTop, 0, 0, canvas.width, canvas.height)
@@ -60,7 +58,6 @@ $(function () {
     return values
   }
 
-  // 35 cells is odd, so the median is always an actual cell value.
   function median (values) {
     const sorted = [...values].sort((a, b) => a - b)
     return sorted[Math.floor(sorted.length / 2)]
@@ -74,15 +71,18 @@ $(function () {
   }
 
   function tick () {
+    if (!video.videoWidth || !video.videoHeight) return
+
     const values = sampleCells()
     values.forEach((value, i) => paint(cells[i], value))
 
-    const output = median(values)
-    avrValue.text(output.toFixed(2))
+    const raw = median(values)
+    pupil.sendDilation(raw).then((result) => {
+      if (!result) return
 
-    if (lastSent !== null && Math.abs(output - lastSent) < DEADZONE) return
-    lastSent = output
-    pupil.sendDilation(output)
+      avrValue.text(typeof result.value === 'number' ? result.value.toFixed(2) : '--')
+      updateDebug({ raw, target: result.target, smooth: result.value, range: result.range })
+    })
   }
 
   function loop () {
@@ -110,8 +110,8 @@ $(function () {
   function lost () {
     clearTimeout(timer)
     video.srcObject = null
-    lastSent = null
-    avrValue.text('0.00')
+    avrValue.text('--')
+    updateDebug({ raw: null, target: null, smooth: null })
     timer = setTimeout(connect, RETRY_MS)
   }
 

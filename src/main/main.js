@@ -1,26 +1,28 @@
-const { app, BrowserWindow, ipcMain, session } = require('electron')
+const { app, BrowserWindow, ipcMain, session, Tray, Menu } = require('electron')
 const path = require('node:path')
 const { findVRChatWindow, isVRChatRunning } = require('./vrchat.js')
-const { sendPupilDilation, setAvatarParameter, startOscListener, getOscStatus } = require('./osc.js')
-const { cleanParameter, loadSettings, saveSettings } = require('./settings.js')
+const { sendPupilDilation, setAvatarParameter, setAutoRange, setPupilRange, startOscListener, getOscStatus, setPaused, isPaused } = require('./osc.js')
+const { cleanParameter, fixRange, fixUpdateRate, loadSettings, saveSettings } = require('./settings.js')
 
-// Only one copy of the app may run at a time. This will matter a lot later:
-// two instances would both fight over the OSC port.
 const gotTheLock = app.requestSingleInstanceLock()
 
 if (!gotTheLock) {
   app.quit()
 } else {
   let mainWindow = null
+  let tray = null
+  let isQuitting = false
+
+  const startHidden = process.argv.includes('--hidden')
 
   function createWindow () {
     mainWindow = new BrowserWindow({
-      width: 1191, // 16:9 at 670px tall
-      height: 670,
+      width: 1191,
+      height: 720,
       show: false,
       title: 'VRCPupil',
-      frame: false, // frameless: title bar + window controls hidden (drag regions live in the UI)
-      resizable: false, // fixed 16:9 layout, no resize handles
+      frame: false,
+      resizable: false,
       autoHideMenuBar: true,
       webPreferences: {
         preload: path.join(__dirname, '..', 'preload', 'preload.js'),
@@ -30,9 +32,10 @@ if (!gotTheLock) {
       }
     })
 
-    mainWindow.once('ready-to-show', () => mainWindow.show())
+    mainWindow.once('ready-to-show', () => {
+      if (!startHidden) mainWindow.show()
+    })
 
-    // F12 toggles DevTools (no application menu needed).
     mainWindow.webContents.on('before-input-event', (event, input) => {
       if (input.type === 'keyDown' && input.key === 'F12') {
         mainWindow.webContents.toggleDevTools()
@@ -40,10 +43,6 @@ if (!gotTheLock) {
       }
     })
 
-    // Dev aid: mirror the renderer's console into the terminal so errors
-    // aren't invisible while no DevTools is open. Electron 44 hands the
-    // details on the event object itself (the old positional args are
-    // deprecated and trigger a warning).
     mainWindow.webContents.on('console-message', (event) => {
       if (app.isPackaged) return
       if (event.message) {
@@ -56,23 +55,68 @@ if (!gotTheLock) {
     mainWindow.loadFile(path.join(__dirname, '..', 'index.html'))
   }
 
-  // Second launch: focus the existing window instead of opening a new one.
-  app.on('second-instance', () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore()
-      mainWindow.focus()
+  function showWindow () {
+    if (!mainWindow) {
+      createWindow()
+      return
     }
-  })
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.show()
+    mainWindow.focus()
+  }
 
-  app.whenReady().then(() => {
-    // IPC surface. Everything the renderer is allowed to ask main for lives here.
-    // Future features (brightness control, OSC settings, config) add handlers here.
+  async function createTray () {
+    let icon = await app.getFileIcon(process.execPath, { size: 'normal' })
+    if (icon.isEmpty()) icon = await app.getFileIcon(process.execPath, { size: 'small' })
+    console.log(`tray: icon ${icon.getSize().width}x${icon.getSize().height}`)
+
+    tray = new Tray(icon)
+    tray.setToolTip('VRCPupil')
+    tray.setContextMenu(Menu.buildFromTemplate([
+      { label: 'Show VRCPupil', click: () => showWindow() },
+      {
+        label: 'Pause output',
+        type: 'checkbox',
+        checked: isPaused(),
+        click: (item) => setPaused(item.checked)
+      },
+      { type: 'separator' },
+      {
+        label: 'Quit',
+        click: () => {
+          isQuitting = true
+          app.quit()
+        }
+      }
+    ]))
+    tray.on('click', () => {
+      if (mainWindow && mainWindow.isVisible()) mainWindow.hide()
+      else showWindow()
+    })
+  }
+
+  function applyStartWithWindows (enabled) {
+    const args = app.isPackaged ? ['--hidden'] : [app.getAppPath(), '--hidden']
+    app.setLoginItemSettings({
+      openAtLogin: Boolean(enabled),
+      path: process.execPath,
+      args
+    })
+  }
+
+  app.on('second-instance', () => showWindow())
+
+  app.on('before-quit', () => { isQuitting = true })
+
+  app.whenReady().then(async () => {
+    const settings = loadSettings()
     ipcMain.handle('app:ping', () => ({ pong: true, time: Date.now() }))
     ipcMain.handle('app:version', () => app.getVersion())
     ipcMain.handle('osc:send', (event, value) => sendPupilDilation(value))
-
-    const settings = loadSettings()
     setAvatarParameter(settings.avatarParameter)
+    setPupilRange(settings.pupilMin, settings.pupilMax)
+    setAutoRange(settings.autoRange)
+
     ipcMain.handle('settings:get', () => settings)
     ipcMain.handle('settings:setAvatarParameter', (event, name) => {
       settings.avatarParameter = cleanParameter(name)
@@ -80,36 +124,84 @@ if (!gotTheLock) {
       saveSettings(settings)
       return settings.avatarParameter
     })
+    ipcMain.handle('settings:update', (event, patch) => {
+      if (!patch || typeof patch !== 'object') return settings
 
-    // Screen capture never shows a picker: the renderer's getDisplayMedia() is
-    // answered here with the VRChat window, or denied when VRChat isn't open.
+      if ('closeToTray' in patch) settings.closeToTray = Boolean(patch.closeToTray)
+      if ('autoRange' in patch) {
+        settings.autoRange = Boolean(patch.autoRange)
+        setAutoRange(settings.autoRange)
+        if (!settings.autoRange) setPupilRange(settings.pupilMin, settings.pupilMax)
+      }
+      if ('updateRate' in patch) {
+        settings.updateRate = fixUpdateRate(patch.updateRate)
+      }
+      if ('startWithWindows' in patch) {
+        settings.startWithWindows = Boolean(patch.startWithWindows)
+        applyStartWithWindows(settings.startWithWindows)
+      }
+      if ('pupilMin' in patch || 'pupilMax' in patch) {
+        Object.assign(settings, fixRange(
+          'pupilMin' in patch ? patch.pupilMin : settings.pupilMin,
+          'pupilMax' in patch ? patch.pupilMax : settings.pupilMax
+        ))
+        setPupilRange(settings.pupilMin, settings.pupilMax)
+      }
+
+      saveSettings(settings)
+      return settings
+    })
+
+    applyStartWithWindows(settings.startWithWindows)
+
     session.defaultSession.setDisplayMediaRequestHandler(async (request, callback) => {
       const source = await findVRChatWindow()
-      callback(source ? { video: source } : {})
+
+      if (!source) {
+        try {
+          callback({})
+        } catch {}
+        return
+      }
+
+      callback({ video: source })
     })
 
     ipcMain.handle('window:minimize', (event) => {
       BrowserWindow.fromWebContents(event.sender)?.minimize()
     })
     ipcMain.handle('window:close', (event) => {
-      BrowserWindow.fromWebContents(event.sender)?.close()
+      const win = BrowserWindow.fromWebContents(event.sender)
+      if (!win) return
+
+      if (settings.closeToTray) {
+        win.hide()
+        return
+      }
+
+      isQuitting = true
+      app.quit()
     })
 
     createWindow()
+    await createTray()
 
     startOscListener()
     setInterval(async () => {
       const running = await isVRChatRunning()
-      mainWindow?.webContents.send('osc:status', getOscStatus(running))
+      const status = getOscStatus(running)
+      mainWindow?.webContents.send('osc:status', status)
+
+      const port = status.port ? ` on :${status.port}` : ''
+      tray?.setToolTip(`VRCPupil — OSC ${status.state}${port}`)
     }, 2000)
 
     app.on('activate', () => {
-      // macOS: clicking the dock icon with no windows open re-creates one.
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
   })
 
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit()
+    if (process.platform !== 'darwin' && isQuitting) app.quit()
   })
 }

@@ -3,6 +3,8 @@ body {
     height: 100svh;
     width: 100svw;
     flex-direction: column;
+    justify-content: flex-start;
+    padding-bottom: 120px;
 }
 img {
     filter: none;

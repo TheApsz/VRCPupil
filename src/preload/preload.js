@@ -1,8 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
-// The renderer only ever sees this object, as `window.vrcpupil`.
-// Keep it small and explicit: every future feature (brightness, OSC,
-// settings) adds one named method here instead of exposing anything raw.
 const api = {
   versions: {
     electron: process.versions.electron,
@@ -16,6 +13,7 @@ const api = {
 
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setAvatarParameter: (name) => ipcRenderer.invoke('settings:setAvatarParameter', name),
+  updateSettings: (patch) => ipcRenderer.invoke('settings:update', patch),
 
   minimize: () => ipcRenderer.invoke('window:minimize'),
   close: () => ipcRenderer.invoke('window:close')

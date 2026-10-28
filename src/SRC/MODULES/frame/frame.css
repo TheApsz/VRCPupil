@@ -20,6 +20,10 @@
         span {
             color: var(--txt2);
             font-size: 16px;
+            -webkit-app-region: no-drag;
+            app-region: no-drag;
+            cursor: pointer;
+            user-select: none;
         }
     }
     .frameControls {

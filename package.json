@@ -1,7 +1,7 @@
 {
   "name": "vrcpupil",
   "productName": "VRCPupil",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Electron app that drives an OSC parameter from screen brightness (pupil dilation for VRChat).",
   "private": true,
   "main": "src/main/main.js",

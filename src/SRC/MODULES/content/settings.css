@@ -1,51 +1,239 @@
 #settings {
-    background: var(--bg2);
-    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 24px;
 
-    .title {
-        margin-bottom: 12px;
+    .settingsGroup {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        .title h1 {
+            font-size: 12px;
+            color: var(--txt2);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
     }
 
     .card {
+        background: var(--bg2);
+        padding: 8px 12px;
+    }
 
-        &.settingsPar {
-            margin-top: 16px;
-        }
+    .settingRow {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
 
+    .settingLabel {
         h3 {
             color: var(--txt);
-            font-size: 20px;
+            font-size: 14px;
         }
+
         .description {
             color: var(--txt2);
             font-size: 12px;
+            font-weight: 400;
         }
-        .avatarTextInput {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: left;
-            background: var(--bgtrans);
-            padding: 4px 8px;
 
-            h2 {
-                color: var(--txt2);
-                font-size: 12px;
-            }
-            input {
-                border: 0;
-                outline: none;
-                background: transparent;
-                color: var(--pri);
-                flex: 1;
-
-                &:focus,
-                &:focus-visible {
-                    background: var(--bgtrans2);
-                    border: 0;
-                    outline: none;
-                }
-            }
+        .description.warning {
+            color: var(--off);
         }
+    }
+}
+
+.avatarTextInput {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+    background: var(--bgtrans);
+    padding: 4px 8px;
+    flex: 1;
+    max-width: 380px;
+
+    h2 {
+        color: var(--txt2);
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    input {
+        border: 0;
+        outline: none;
+        background: transparent;
+        color: var(--pri);
+        font-size: 12px;
+        flex: 1;
+        min-width: 0;
+
+        &:focus,
+        &:focus-visible {
+            border: 0;
+            outline: none;
+        }
+    }
+}
+
+.paramDropdown {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 50;
+    max-height: 148px;
+    overflow-y: auto;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    overflow-x: hidden;
+
+    &.open {
+        display: block;
+    }
+
+    &.flip {
+        top: auto;
+        bottom: calc(100% + 4px);
+    }
+
+    .paramOption {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 4px 8px;
+        font-size: 12px;
+        color: var(--txt);
+        cursor: pointer;
+
+        .value {
+            color: var(--txt2);
+            font-size: 11px;
+            flex: none;
+        }
+
+        &:hover,
+        &[data-active="true"] {
+            background: var(--bgtrans3);
+        }
+
+        &[data-selected="true"] .name {
+            color: var(--pri);
+        }
+    }
+
+    .paramEmpty {
+        padding: 6px 8px;
+        font-size: 11px;
+        line-height: 1.4;
+        color: var(--txt2);
+        cursor: default;
+    }
+}
+
+.rangeInput {
+    position: relative;
+    width: 190px;
+    height: 18px;
+    flex: none;
+
+    &.muted {
+        opacity: 0.35;
+        pointer-events: none;
+    }
+
+    .rangeTrack {
+        position: absolute;
+        inset: 0;
+        background: var(--bgtrans3);
+        z-index: 0;
+    }
+
+    .rangeFill {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: var(--pri);
+        z-index: 1;
+    }
+
+    input[type="range"] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 18px;
+        margin: 0;
+        padding: 0;
+        background: none;
+        appearance: none;
+        -webkit-appearance: none;
+        pointer-events: none;
+        z-index: 2;
+
+        &::-webkit-slider-runnable-track {
+            background: none;
+            border: 0;
+            height: 18px;
+        }
+
+        &::-webkit-slider-thumb {
+            appearance: none;
+            -webkit-appearance: none;
+            pointer-events: auto;
+            width: 8px;
+            height: 18px;
+            border: 0;
+            background: black;
+            cursor: ew-resize;
+        }
+
+        &:focus-visible::-webkit-slider-thumb {
+            background: var(--pri);
+        }
+    }
+}
+
+.toggle {
+    position: relative;
+    width: 34px;
+    height: 18px;
+    flex: none;
+    background: var(--bgtrans3);
+    cursor: pointer;
+    transition: background var(--F1);
+
+    .knob {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 14px;
+        height: 14px;
+        background: var(--txt2);
+        transition: transform var(--F1), background var(--F1);
+    }
+
+    &[data-on="true"] {
+        background: var(--pri);
+
+        .knob {
+            transform: translateX(16px);
+            background: var(--bg);
+        }
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--pri);
+        outline-offset: 2px;
     }
 }
